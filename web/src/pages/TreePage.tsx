@@ -126,6 +126,7 @@ export default function TreePage() {
               <Button variant="secondary" onClick={() => { setCollapsed((c) => { const n = new Set(c); n.has(selected.id) ? n.delete(selected.id) : n.add(selected.id); return n; }); setSelected(null); }}>
                 {collapsed.has(selected.id) ? "گسترش فرزندان" : "جمع فرزندان"}
               </Button>
+              <Button variant="soft" size="sm" onClick={() => { pickRoot(selected.id); setSelected(null); }}>🎯 ریشه درخت</Button>
             </div>
             <div style={{ marginTop: 14 }} className="tree-legend">
               {selected.birth_place && `محل تولد: ${selected.birth_place} · `}

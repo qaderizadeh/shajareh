@@ -29,5 +29,17 @@ export function adminRoutes(adminSvc: AdminService, _privacy: PrivacyService) {
     return c.json(await adminSvc.removeUser(user, c.req.param("id")));
   });
 
+  app.get("/families", async (c) => {
+    const user = c.get("user");
+    if (user.role !== "ADMIN") throw forbidden("دسترسی ادمین لازم است", "ADMIN_ONLY");
+    return c.json({ families: await adminSvc.listFamilies(user) });
+  });
+
+  app.get("/audit-logs", async (c) => {
+    const user = c.get("user");
+    if (user.role !== "ADMIN") throw forbidden("دسترسی ادمین لازم است", "ADMIN_ONLY");
+    return c.json({ logs: await adminSvc.listAuditLogs(user) });
+  });
+
   return app;
 }

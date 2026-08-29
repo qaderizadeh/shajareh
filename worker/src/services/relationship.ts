@@ -170,6 +170,31 @@ export class RelationshipService {
     return { persons: result, rootId: personId };
   }
 
+  /** فرزندان و نسل‌های بعد (descendants) */
+  async descendants(familyId: string, personId: string, maxDepth = 8) {
+    const { edges, persons } = await this.loadGraph(familyId);
+    const { childrenOf, spousesOf } = this.index(edges);
+    const byId = new Map(persons.map((p) => [p.id, p]));
+    const seen = new Set<string>([personId]);
+    const result: PersonNode[] = [];
+    const stack: Array<[string, number]> = [[personId, 0]];
+    while (stack.length) {
+      const [current, depth] = stack.pop()!;
+      if (depth > maxDepth) continue;
+      const kids = childrenOf.get(current) ?? [];
+      const spouses = spousesOf.get(current) ?? [];
+      for (const s of spouses) { if (!seen.has(s)) { seen.add(s); const n = byId.get(s); if (n) result.push(n); } }
+      for (const c of kids) {
+        if (!seen.has(c)) {
+          seen.add(c);
+          const node = byId.get(c);
+          if (node) { result.push(node); stack.push([c, depth + 1]); }
+        }
+      }
+    }
+    return { persons: result, rootId: personId };
+  }
+
   /** نسل‌ها (descendants) و view خانواده از یک فرد */
   async familyView(familyId: string, personId: string, maxDepth = 6) {
     const { edges, persons } = await this.loadGraph(familyId);

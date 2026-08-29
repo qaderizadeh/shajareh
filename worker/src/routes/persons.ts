@@ -59,6 +59,15 @@ export function personRoutes(personSvc: PersonService, privacySvc: PrivacyServic
     return c.json({ ok: true });
   });
 
+  app.get("/:id/descendants", async (c) => {
+    const user = c.get("user");
+    const personId = c.req.param("id");
+    const p = await personSvc.get(personId);
+    await privacySvc.requireRead(user, p.family_id as string);
+    const depth = Number(c.req.query("depth") ?? 8);
+    return c.json(await relSvcFactory(c).descendants(p.family_id as string, personId, depth));
+  });
+
   app.get("/:id/ancestors", async (c) => {
     const user = c.get("user");
     const personId = c.req.param("id");

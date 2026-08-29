@@ -7,7 +7,7 @@ const NAV = [
   { to: "/", icon: "🏠", label: "خانه" },
   { to: "/tree", icon: "🌳", label: "شجره" },
   { to: "/search", icon: "🔍", label: "جستجو" },
-  { to: "/ai", icon: "✨", label: "هوش" },
+  { to: "/stories", icon: "📖", label: "داستان" },
   { to: "/settings", icon: "⚙️", label: "تنظیمات" },
 ];
 

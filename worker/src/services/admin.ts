@@ -59,4 +59,25 @@ export class AdminService {
     await this.env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetId).run();
     return { ok: true };
   }
+
+  async listFamilies(user: User, limit = 50) {
+    this.requireAdmin(user);
+    const { results } = await this.env.DB.prepare(
+      `SELECT f.id, f.name, f.description, f.created_at,
+              (SELECT COUNT(*) FROM persons p WHERE p.family_id = f.id) AS persons_count,
+              (SELECT COUNT(*) FROM family_memberships m WHERE m.family_id = f.id AND m.status='ACTIVE') AS members_count
+       FROM families f ORDER BY f.created_at DESC LIMIT ?`
+    ).bind(limit).all<Record<string, unknown>>();
+    return results;
+  }
+
+  async listAuditLogs(user: User, limit = 50) {
+    this.requireAdmin(user);
+    const { results } = await this.env.DB.prepare(
+      `SELECT a.*, u.name AS user_name FROM audit_logs a
+       LEFT JOIN users u ON u.id = a.user_id
+       ORDER BY a.created_at DESC LIMIT ?`
+    ).bind(limit).all<Record<string, unknown>>();
+    return results;
+  }
 }

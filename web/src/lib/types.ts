@@ -43,6 +43,7 @@ export interface Person {
   education: string;
   biography: string;
   is_private: number;
+  privacy_level?: string;
 }
 
 export interface PersonGraphNode {

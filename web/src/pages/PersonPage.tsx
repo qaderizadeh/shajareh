@@ -345,6 +345,7 @@ function EditForm({ person, onSaved }: { person: Person; onSaved: () => void }) 
     father_name: person.father_name, mother_name: person.mother_name,
     occupation: person.occupation, residence: person.residence, education: person.education, biography: person.biography,
     is_living: person.is_living === 1,
+    is_private: person.is_private === 1,
   });
   async function save() {
     try {
@@ -386,6 +387,10 @@ function EditForm({ person, onSaved }: { person: Person; onSaved: () => void }) 
       <Field label="محل زندگی"><TextInput value={form.residence} onChange={(e) => set("residence", e.target.value)} /></Field>
       <Field label="تحصیلات"><TextInput value={form.education} onChange={(e) => set("education", e.target.value)} /></Field>
       <Field label="زندگی‌نامه"><TextArea value={form.biography} onChange={(e) => set("biography", e.target.value)} /></Field>
+      <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", marginBottom: 12 }}>
+        <input type="checkbox" checked={form.is_private} onChange={(e) => set("is_private", e.target.checked)} />
+        🔒 اطلاعات خصوصی
+      </label>
       <Button block size="lg" onClick={save}>ذخیره تغییرات</Button>
     </div>
   );

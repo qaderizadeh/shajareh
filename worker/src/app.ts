@@ -24,6 +24,8 @@ import { mediaRoutes } from "./routes/media";
 import { aiRoutes } from "./routes/ai";
 import { adminRoutes } from "./routes/admin";
 import { exportRoutes } from "./routes/export";
+import { storiesRoutes } from "./routes/stories";
+import { StoriesService } from "./services/stories";
 
 export function buildApp(env: Env): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -47,6 +49,7 @@ export function buildApp(env: Env): Hono<AppEnv> {
   const media = new MediaService(env);
   const ai = new AiService(env);
   const admin = new AdminService(env);
+  const stories = new StoriesService(env);
 
   app.get("/api/health", (c) => c.json({ ok: true, name: "شجره", env: env.ENVIRONMENT }));
 
@@ -59,6 +62,7 @@ export function buildApp(env: Env): Hono<AppEnv> {
   app.route("/api/ai", aiRoutes(ai, privacy));
   app.route("/api/admin", adminRoutes(admin, privacy));
   app.route("/api/export", exportRoutes(privacy));
+  app.route("/api/stories", storiesRoutes(stories, privacy));
 
   // مسیرهای غیر-API را به اسپا (در صورت در دسترس بودن assets) بسپار
   app.notFound(async (c) => {

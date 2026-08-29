@@ -27,6 +27,7 @@ interface PersonPayload {
   education?: string;
   biography?: string;
   is_living?: boolean;
+  is_private?: boolean;
 }
 
 export default function AddPersonPage() {
@@ -161,6 +162,10 @@ export default function AddPersonPage() {
             <Field label="شغل"><TextInput value={form.occupation} onChange={(e) => setField("occupation", e.target.value)} /></Field>
             <Field label="محل زندگی"><TextInput value={form.residence} onChange={(e) => setField("residence", e.target.value)} /></Field>
             <Field label="زندگی‌نامه / خاطرات"><TextArea value={form.biography} onChange={(e) => setField("biography", e.target.value)} /></Field>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", marginTop: 8 }}>
+              <input type="checkbox" checked={form.is_private ?? false} onChange={(e) => setField("is_private", e.target.checked)} />
+              🔒 اطلاعات خصوصی (فقط خودت ببینی)
+            </label>
           </div>
         )}
 

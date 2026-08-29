@@ -10,6 +10,7 @@ import SettingsPage from "./pages/SettingsPage";
 import AdminPage from "./pages/AdminPage";
 import PersonPage from "./pages/PersonPage";
 import AddPersonPage from "./pages/AddPersonPage";
+import StoriesPage from "./pages/StoriesPage";
 
 export default function App() {
   return (
@@ -22,9 +23,9 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/ai" element={<AIPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/persons/new" element={<AddPersonPage />} />
-        <Route path="/persons/:id" element={<PersonPage />} />
+        <Route path="/admin" element={<AdminPage />} />          <Route path="/persons/new" element={<AddPersonPage />} />
+          <Route path="/persons/:id" element={<PersonPage />} />
+          <Route path="/stories" element={<StoriesPage />} />
       </Route>
     </Routes>
   );
