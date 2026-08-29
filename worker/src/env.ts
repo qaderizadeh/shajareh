@@ -3,7 +3,7 @@ import type { Ai, KVNamespace, R2Bucket, D1Database } from "@cloudflare/workers-
 export interface Env {
   DB: D1Database;
   SESSIONS: KVNamespace;
-  MEDIA: R2Bucket;
+  MEDIA?: R2Bucket;
   AI: Ai;
   ENVIRONMENT: string;
   AI_PROVIDER: string;

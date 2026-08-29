@@ -25,15 +25,23 @@ export class MediaService {
     this.audit = new AuditService(env);
   }
 
+  private requireBucket() {
+    if (!this.env.MEDIA) {
+      throw badRequest("ذخیرهٔ فایل هنوز فعال نشده است؛ لطفاً R2 را در حساب Cloudflare فعال کنید.", "R2_DISABLED");
+    }
+    return this.env.MEDIA;
+  }
+
   async upload(user: User, familyId: string, file: Blob, opts: { person_id?: string; caption?: string; kind?: "PHOTO" | "DOCUMENT" }) {
     if (!ALLOWED.has(file.type)) throw badRequest("نوع فایل مجاز نیست (تصویر یا PDF)", "BAD_FILE_TYPE");
     if (file.size > MAX_PHOTO) throw badRequest("حجم فایل نباید بیشتر از ۸ مگابایت باشد", "FILE_TOO_LARGE");
+    const bucket = this.requireBucket();
 
     const kind = opts.kind ?? (file.type === "application/pdf" ? "DOCUMENT" : "PHOTO");
     const ext = extFromMime(file.type);
     const uid = uuid();
     const key = mediaKey(familyId, kind, ext);
-    await this.env.MEDIA.put(key, file.stream(), {
+    await bucket.put(key, file.stream(), {
       httpMetadata: { contentType: file.type },
       customMetadata: { familyId, sideOf: opts.person_id ?? "" },
     });
@@ -69,15 +77,17 @@ export class MediaService {
   }
 
   async serve(familyId: string, id: string): Promise<{ body: ReadableStream; type: string; length: number } | null> {
+    const bucket = this.requireBucket();
     const row = await this.get(familyId, id);
-    const object = await this.env.MEDIA.get(row.storage_key as string);
+    const object = await bucket.get(row.storage_key as string);
     if (!object) return null;
     return { body: object.body, type: (row.mime_type as string) || "application/octet-stream", length: Number(object.size) };
   }
 
   async remove(user: User, familyId: string, id: string) {
+    const bucket = this.requireBucket();
     const row = await this.get(familyId, id);
-    await this.env.MEDIA.delete(row.storage_key as string);
+    await bucket.delete(row.storage_key as string);
     await this.env.DB.prepare("DELETE FROM media WHERE id = ? AND family_id = ?").bind(id, familyId).run();
     await this.audit.log({ userId: user.id, entityType: "media", entityId: id, action: "DELETE", before: row });
   }

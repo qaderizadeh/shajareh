@@ -14,18 +14,19 @@ not_found_handling = "single-page-application"
 [[d1_databases]]
 binding = "DB"
 database_name = "shajareh-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "fd1c559f-7aa6-4a2f-a875-716987711e95"
 migrations_dir = "migrations"
 
 # Sessions (KV)
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "00000000000000000000000000000000"
+id = "e4dc438f9c864b40abd05e778223f15e"
 
-# Media storage (R2)
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "shajareh-media"
+# Media storage (R2) — note: uncommented once you enable R2 in the dashboard and
+# create the bucket with `wrangler r2 bucket create shajareh-media`.
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "shajareh-media"
 
 # Workers AI
 [ai]
