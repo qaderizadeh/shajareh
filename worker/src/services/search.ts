@@ -36,8 +36,8 @@ export class SearchService {
       `SELECT p.id, p.family_id, p.first_name, p.last_name, p.gender, p.birth_date_text, p.death_date_text,
               p.birth_place, p.is_living, f.name AS family_name
        FROM persons p JOIN families f ON f.id = p.family_id
-       WHERE (${filters.familyId ? "p.family_id = ? AND " : ""}
-             p.first_name LIKE ? OR p.last_name LIKE ? OR p.birth_place LIKE ?
+       WHERE ${filters.familyId ? "p.family_id = ? AND " : ""}
+             (p.first_name LIKE ? OR p.last_name LIKE ? OR p.birth_place LIKE ?
              OR p.occupation LIKE ? OR p.biography LIKE ?)
        ORDER BY p.last_name, p.first_name LIMIT ? OFFSET ?`
     )

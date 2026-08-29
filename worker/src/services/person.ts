@@ -98,7 +98,25 @@ export class PersonService {
 
   async update(user: User, personId: string, input: PersonInput) {
     const existing = await this.get(personId);
-    const v = this.buildValues(input);
+    // Merge: use input if provided, otherwise keep existing value
+    const merged: PersonInput = {
+      first_name: input.first_name ?? (existing.first_name as string),
+      last_name: input.last_name ?? (existing.last_name as string),
+      father_name: input.father_name ?? (existing.father_name as string),
+      mother_name: input.mother_name ?? (existing.mother_name as string),
+      gender: (input.gender ?? existing.gender as string) as Gender,
+      birth_date_text: input.birth_date_text ?? (existing.birth_date_text as string),
+      birth_place: input.birth_place ?? (existing.birth_place as string),
+      death_date_text: input.death_date_text ?? (existing.death_date_text as string),
+      death_place: input.death_place ?? (existing.death_place as string),
+      is_living: input.is_living ?? Boolean(existing.is_living),
+      occupation: input.occupation ?? (existing.occupation as string),
+      residence: input.residence ?? (existing.residence as string),
+      education: input.education ?? (existing.education as string),
+      biography: input.biography ?? (existing.biography as string),
+      is_private: input.is_private ?? Boolean(existing.is_private),
+    };
+    const v = this.buildValues(merged);
     await this.env.DB.prepare(
       `UPDATE persons SET
         first_name=?, last_name=?, father_name=?, mother_name=?, gender=?,
