@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { Card, EmptyState, ErrorState, LoadingState } from "../components/ui";
+import { Button, Card, EmptyState, ErrorState, LoadingState, Modal, Select, useToast } from "../components/ui";
 import { faDigits } from "../lib/format";
 import type { User } from "../lib/types";
 
@@ -8,11 +8,14 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Record<string, number> | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [err, setErr] = useState("");
+  const toast = useToast();
+  const [targetUser, setTargetUser] = useState<User | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const s = await api.get<{ stats: Record<string, number> }>("/admin/stats");
+        const s = await api.get<{ stats: Record<string, number> }>(("/admin/stats"));
         setStats(s.stats);
         const u = await api.get<{ users: User[] }>("/admin/users");
         setUsers(u.users);
@@ -21,6 +24,29 @@ export default function AdminPage() {
       }
     })();
   }, []);
+
+  async function changeRole(user: User, role: "ADMIN" | "USER") {
+    try {
+      await api.patch(`/admin/users/${user.id}/role`, { role });
+      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, role } : u));
+      toast.push(`نقش ${user.name} به ${role === "ADMIN" ? "مدیر" : "کاربر"} تغییر کرد`, "success");
+    } catch (e) {
+      toast.push((e as Error).message, "error");
+    }
+  }
+
+  async function deleteUser() {
+    if (!targetUser) return;
+    try {
+      await api.del(`/admin/users/${targetUser.id}`);
+      setUsers((prev) => prev.filter((u) => u.id !== targetUser.id));
+      toast.push(`${targetUser.name} حذف شد`, "success");
+      setConfirmDelete(false);
+      setTargetUser(null);
+    } catch (e) {
+      toast.push((e as Error).message, "error");
+    }
+  }
 
   if (err) return <ErrorState message={err} />;
   if (!stats) return <LoadingState label="در حال بارگذاری آمار…" />;
@@ -52,18 +78,44 @@ export default function AdminPage() {
         <Card>
           <div className="list">
             {users.map((u) => (
-              <div key={u.id} className="list-item" style={{ cursor: "default" }}>
+              <div key={u.id} className="list-item" style={{ cursor: "default", flexWrap: "wrap" }}>
                 <div className="avatar" style={{ width: 38, height: 38, fontSize: "var(--text-sm)" }}>{u.name?.[0] ?? "؟"}</div>
                 <div className="grow">
                   <div style={{ fontWeight: 600 }}>{u.name}</div>
                   <div className="muted" style={{ fontSize: "var(--text-xs)", direction: "ltr", textAlign: "left" }}>{u.email}</div>
                 </div>
-                <span className={`badge ${u.role === "ADMIN" ? "badge-primary" : "badge-success"}`}>{u.role === "ADMIN" ? "مدیر" : "کاربر"}</span>
+                <div className="row spacing-2" style={{ flexWrap: "wrap" }}>
+                  <Select
+                    value={u.role}
+                    onChange={(e) => changeRole(u, e.target.value as "ADMIN" | "USER")}
+                    style={{ minWidth: 100, minHeight: 34, padding: "4px 8px", fontSize: "var(--text-xs)" }}
+                    aria-label={`نقش ${u.name}`}
+                  >
+                    <option value="USER">کاربر</option>
+                    <option value="ADMIN">مدیر</option>
+                  </Select>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => { setTargetUser(u); setConfirmDelete(true); }}
+                    style={{ minHeight: 34, padding: "4px 10px", fontSize: "var(--text-xs)" }}
+                  >
+                    حذف
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         </Card>
       )}
+
+      <Modal open={confirmDelete} title="حذف کاربر" onClose={() => setConfirmDelete(false)}>
+        <p>آیا از حذف <strong>{targetUser?.name}</strong> مطمئنید؟ تمام داده‌های این کاربر حذف خواهد شد.</p>
+        <div className="row spacing-2" style={{ marginTop: 16 }}>
+          <Button variant="danger" onClick={deleteUser}>بله، حذف شود</Button>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>لغو</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

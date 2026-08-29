@@ -23,6 +23,7 @@ import { searchRoutes } from "./routes/search";
 import { mediaRoutes } from "./routes/media";
 import { aiRoutes } from "./routes/ai";
 import { adminRoutes } from "./routes/admin";
+import { exportRoutes } from "./routes/export";
 
 export function buildApp(env: Env): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -57,6 +58,7 @@ export function buildApp(env: Env): Hono<AppEnv> {
   app.route("/api/media", mediaRoutes(media, privacy));
   app.route("/api/ai", aiRoutes(ai, privacy));
   app.route("/api/admin", adminRoutes(admin, privacy));
+  app.route("/api/export", exportRoutes(privacy));
 
   // مسیرهای غیر-API را به اسپا (در صورت در دسترس بودن assets) بسپار
   app.notFound(async (c) => {

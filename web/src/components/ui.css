@@ -125,7 +125,7 @@
   z-index: 51;
   max-height: 88dvh;
   overflow: auto;
-  padding: var(--space-3) var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
   animation: slideUp 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .sheet-handle {

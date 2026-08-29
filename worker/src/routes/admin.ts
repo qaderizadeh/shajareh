@@ -24,5 +24,10 @@ export function adminRoutes(adminSvc: AdminService, _privacy: PrivacyService) {
     return c.json(await adminSvc.setRole(user, c.req.param("id"), body.role ?? "USER"));
   });
 
+  app.delete("/users/:id", async (c) => {
+    const user = c.get("user");
+    return c.json(await adminSvc.removeUser(user, c.req.param("id")));
+  });
+
   return app;
 }

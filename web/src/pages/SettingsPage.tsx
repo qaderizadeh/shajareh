@@ -9,17 +9,33 @@ import { useActiveFamily } from "../activeFamily";
 export default function SettingsPage() {
   const { user, logout, refresh } = useAuth();
   const { theme, toggle } = useTheme();
-  const { familyId, families, setFamilyId, refresh: refreshFamily } = useActiveFamily();
+  const { familyId, family, families, setFamilyId, refresh: refreshFamily } = useActiveFamily();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name ?? "");
   const [saved, setSaved] = useState(false);
 
   async function save(e: FormEvent) {
     e.preventDefault();
-    await api.patch(`/users/me`, { name });
+    await api.patch(`/auth/me`, { name });
     setSaved(true);
     await refresh();
     await refreshFamily();
+  }
+
+  async function exportJSON() {
+    if (!familyId) return;
+    try {
+      const data = await api.get<{ family: unknown; persons: unknown[]; relationships: unknown[]; media: unknown[] }>(`/export/family/${familyId}`);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `شجره-${family?.name ?? "export"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      window.alert((err as Error).message);
+    }
   }
 
   async function handleLogout() {
@@ -73,7 +89,7 @@ export default function SettingsPage() {
 
       <Card style={{ marginBottom: 16 }}>
         <h3 style={{ marginBottom: 10 }}>داده‌ها</h3>
-        <Button variant="secondary" size="sm" onClick={() => window.alert("خروجی JSON به‌زودی اضافه می‌شود (GEDCOM در برنامهٔ بعدی).")}>
+        <Button variant="secondary" size="sm" onClick={exportJSON} disabled={!familyId}>
           استخراج داده‌ها (JSON)
         </Button>
       </Card>

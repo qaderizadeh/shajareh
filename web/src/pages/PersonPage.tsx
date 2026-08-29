@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
-import { Avatar, Badge, Button, Card, EmptyState, ErrorState, LoadingState, BottomSheet, useToast, Field, Select, TextArea, TextInput } from "../components/ui";
+import { Avatar, Badge, Button, Card, EmptyState, ErrorState, LoadingState, BottomSheet, Modal, useToast, Field, Select, TextArea, TextInput } from "../components/ui";
 import { faDigits, genderLabel, initials, lifeSpan, personName } from "../lib/format";
+import { MediaImage } from "../components/MediaImage";
 import type { MediaItem, Person, PersonGraphNode } from "../lib/types";
 
 interface FamilyView {
@@ -25,7 +26,8 @@ export default function PersonPage() {
   const [siblings, setSiblings] = useState<PersonGraphNode[]>([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sheet, setSheet] = useState<null | "edit" | "media" | "rel">(null);
+  const [sheet, setSheet] = useState<null | "edit" | "media" | "addRel">(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -48,7 +50,6 @@ export default function PersonPage() {
 
   function derive(fv: FamilyView) {
     const byId = new Map(fv.persons.map((p) => [p.id, p]));
-    // والدین: کسانی که من فرزندِ آن‌هایند (childMap[parent] شامل من باشد)
     const parents: PersonGraphNode[] = [];
     for (const [parentId, kids] of Object.entries(fv.childMap)) {
       if (kids.includes(id!) && parentId !== id) parents.push(byId.get(parentId)!);
@@ -56,13 +57,23 @@ export default function PersonPage() {
     setParents(parents.filter(Boolean));
     setSpouses((fv.spouseMap[id!] ?? []).map((x) => byId.get(x)!).filter(Boolean));
     setChildren((fv.childMap[id!] ?? []).map((x) => byId.get(x)!).filter(Boolean));
-    // خواهر/برادر: سایر فرزندان والدین
     const sib = new Set<string>();
     for (const parentId of new Set(fv.persons.map((p) => p.id))) {
       const kids = fv.childMap[parentId] ?? [];
       if (kids.includes(id!) && kids.length > 1) kids.forEach((k) => { if (k !== id) sib.add(k); });
     }
     setSiblings([...sib].map((x) => byId.get(x)!).filter(Boolean));
+  }
+
+  async function deletePerson() {
+    if (!person) return;
+    try {
+      await api.del(`/persons/${person.id}`);
+      toast.push("فرد حذف شد", "success");
+      navigate("/");
+    } catch (e) {
+      toast.push((e as Error).message, "error");
+    }
   }
 
   if (loading) return <LoadingState label="در حال بارگذاری…" />;
@@ -87,13 +98,14 @@ export default function PersonPage() {
           <Button size="sm" onClick={() => navigate(`/tree?family=${person.family_id}&root=${person.id}`)}>🌳 در شجره</Button>
           <Button variant="soft" size="sm" onClick={() => setSheet("media")}>📷 عکس‌ها ({media.length})</Button>
           <Button variant="secondary" size="sm" onClick={() => setSheet("edit")}>ویرایش</Button>
+          <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>🗑️ حذف</Button>
         </div>
       </Card>
 
       {/* خانواده */}
       <h3 style={{ margin: "20px 0 8px" }}>خانواده</h3>
       <RelGroup title="والدین" items={parents} onPick={(pid) => navigate(`/persons/${pid}`)} empty="هنوز والدی ثبت نشده است" />
-      <RelGroup title="همسر" items={spouses} onPick={(pid) => navigate(`/persons/${pid}`)} empty="هنوز همسری ثبت نشده است" action={`+ افزودن همسر`} onAction={() => navigate(`/persons/new`)} />
+      <RelGroup title="همسر" items={spouses} onPick={(pid) => navigate(`/persons/${pid}`)} empty="هنوز همسری ثبت نشده است" action="+ افزودن همسر" onAction={() => setSheet("addRel")} />
       <RelGroup title="فرزندان" items={children} onPick={(pid) => navigate(`/persons/${pid}`)} empty="هنوز فرزندی ثبت نشده است" />
       <RelGroup title="خواهر/برادر" items={siblings} onPick={(pid) => navigate(`/persons/${pid}`)} empty="هنوز ثبت نشده است" />
 
@@ -120,9 +132,10 @@ export default function PersonPage() {
         </>
       )}
 
-      {/* Timeline ساده */}
+      {/* Timeline */}
       <Timeline person={person} />
 
+      {/* رسانه */}
       <BottomSheet open={sheet === "media"} title="عکس‌ها و اسناد" onClose={() => setSheet(null)}>
         <MetaUpload groupId={id!} familyId={person.family_id} />
         {media.length === 0 ? (
@@ -130,15 +143,39 @@ export default function PersonPage() {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 12 }}>
             {media.map((m) => (
-              <img key={m.id} src={`/api/media/${m.id}`} alt={m.caption || "عکس"} loading="lazy" style={{ width: "100%", height: 110, objectFit: "cover", borderRadius: 12 }} />
+              <MediaImage
+                key={m.id}
+                mediaId={m.id}
+                alt={m.caption || "عکس"}
+                style={{ width: "100%", height: 110, objectFit: "cover", borderRadius: 12 }}
+              />
             ))}
           </div>
         )}
       </BottomSheet>
 
+      {/* ویرایش */}
       <BottomSheet open={sheet === "edit"} title="ویرایش اطلاعات" onClose={() => setSheet(null)}>
         <EditForm person={person} onSaved={() => { setSheet(null); toast.push("ذخیره شد", "success"); window.location.reload(); }} />
       </BottomSheet>
+
+      {/* افزودن رابطه */}
+      <BottomSheet open={sheet === "addRel"} title="افزودن رابطه" onClose={() => setSheet(null)}>
+        <AddRelForm
+          personId={person.id}
+          familyId={person.family_id}
+          onDone={() => { setSheet(null); toast.push("رابطه اضافه شد", "success"); window.location.reload(); }}
+        />
+      </BottomSheet>
+
+      {/* تأیید حذف */}
+      <Modal open={confirmDelete} title="حذف فرد" onClose={() => setConfirmDelete(false)}>
+        <p>آیا از حذف <strong>{person.first_name} {person.last_name}</strong> مطمئنید؟ این عمل بازگشت‌ناپذیر است.</p>
+        <div className="row spacing-2" style={{ marginTop: 16 }}>
+          <Button variant="danger" onClick={deletePerson}>بله، حذف شود</Button>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>لغو</Button>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -171,6 +208,78 @@ function RelGroup({ title, items, onPick, empty, action, onAction }: { title: st
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** فرم کوچک افزودن رابطه از صفحهٔ شخص */
+function AddRelForm({ personId, familyId, onDone }: { personId: string; familyId: string; onDone: () => void }) {
+  const [type, setType] = useState<"SPOUSE" | "PARENT" | "CHILD">("SPOUSE");
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [existingId, setExistingId] = useState("");
+  const [newName, setNewName] = useState("");
+  const [people, setPeople] = useState<Person[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api.get<{ results: Person[] }>(`/search?familyId=${familyId}&limit=100`).then((d) => setPeople(d.results)).catch(() => {});
+  }, [familyId]);
+
+  async function submit() {
+    if (mode === "existing" && !existingId) return;
+    if (mode === "new" && !newName.trim()) return;
+    setBusy(true);
+    try {
+      let targetId = existingId;
+      if (mode === "new") {
+        const { person } = await api.post<{ person: Person }>("/persons", { family_id: familyId, first_name: newName.trim(), is_living: true });
+        targetId = person.id;
+      }
+      // type=PARENT means targetId is parent of personId; type=CHILD means targetId is child; SPOUSE is symmetric
+      const from = type === "CHILD" ? targetId : personId;
+      const to = type === "CHILD" ? personId : targetId;
+      const relType = type === "SPOUSE" ? "SPOUSE" : type === "PARENT" ? "PARENT" : "PARENT";
+      await api.post("/relationships", { family_id: familyId, person_a_id: from, person_b_id: to, relationship_type: relType });
+      onDone();
+    } catch (e) {
+      window.alert((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <Field label="نوع رابطه">
+        <Select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
+          <option value="SPOUSE">💞 همسر</option>
+          <option value="PARENT">👪 والد (این فرد والدِ شخص جاری است)</option>
+          <option value="CHILD">👶 فرزند (این فرد فرزندِ شخص جاری است)</option>
+        </Select>
+      </Field>
+      <Field label="اتصال به">
+        <Select value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
+          <option value="existing">فرد موجود</option>
+          <option value="new">فرد جدید</option>
+        </Select>
+      </Field>
+      {mode === "existing" ? (
+        <Field label="انتخاب فرد">
+          <Select value={existingId} onChange={(e) => setExistingId(e.target.value)}>
+            <option value="">انتخاب کنید…</option>
+            {people.filter((p) => p.id !== personId).map((p) => (
+              <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+            ))}
+          </Select>
+        </Field>
+      ) : (
+        <Field label="نام فرد جدید">
+          <TextInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="نام" />
+        </Field>
+      )}
+      <Button block onClick={submit} disabled={busy} style={{ marginTop: 8 }}>
+        {busy ? "…در حال ذخیره" : "ذخیره رابطه"}
+      </Button>
     </div>
   );
 }
@@ -235,18 +344,19 @@ function EditForm({ person, onSaved }: { person: Person; onSaved: () => void }) 
     death_date_text: person.death_date_text, death_place: person.death_place,
     father_name: person.father_name, mother_name: person.mother_name,
     occupation: person.occupation, residence: person.residence, education: person.education, biography: person.biography,
+    is_living: person.is_living === 1,
   });
   async function save() {
     try {
-      await api.patch(`/persons/${person.id}`, form);
+      await api.patch(`/persons/${person.id}`, { ...form, is_living: form.is_living });
       onSaved();
     } catch (err) {
       window.alert((err as Error).message);
     }
   }
-  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
   return (
-    <div>
+    <div style={{ overflowY: "auto", maxHeight: "70vh" }}>
       <div className="row spacing-2">
         <div style={{ flex: 1 }}><Field label="نام"><TextInput value={form.first_name} onChange={(e) => set("first_name", e.target.value)} /></Field></div>
         <div style={{ flex: 1 }}><Field label="نام خانوادگی"><TextInput value={form.last_name} onChange={(e) => set("last_name", e.target.value)} /></Field></div>
@@ -263,8 +373,14 @@ function EditForm({ person, onSaved }: { person: Person; onSaved: () => void }) 
         <div style={{ flex: 1 }}><Field label="محل تولد"><TextInput value={form.birth_place} onChange={(e) => set("birth_place", e.target.value)} /></Field></div>
       </div>
       <div className="row spacing-2">
-        <div style={{ flex: 1 }}><Field label="تاریخ وفات"><TextInput value={form.death_date_text} onChange={(e) => set("death_date_text", e.target.value)} /></Field></div>
+        <div style={{ flex: 1 }}><Field label="تاریخ وفات"><TextInput value={form.death_date_text} onChange={(e) => { set("death_date_text", e.target.value); if (e.target.value) set("is_living", false); }} /></Field></div>
         <div style={{ flex: 1 }}><Field label="محل وفات"><TextInput value={form.death_place} onChange={(e) => set("death_place", e.target.value)} /></Field></div>
+      </div>
+      <div className="row spacing-2" style={{ alignItems: "center" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+          <input type="checkbox" checked={form.is_living} onChange={(e) => { set("is_living", e.target.checked); if (!e.target.checked && !form.death_date_text) set("death_date_text", " "); }} />
+          زنده
+        </label>
       </div>
       <Field label="شغل"><TextInput value={form.occupation} onChange={(e) => set("occupation", e.target.value)} /></Field>
       <Field label="محل زندگی"><TextInput value={form.residence} onChange={(e) => set("residence", e.target.value)} /></Field>

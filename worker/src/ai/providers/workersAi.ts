@@ -17,7 +17,7 @@ export class LazyWorkersProvider implements GenealogyAIProvider {
 
   async parseGenealogyText(input: string): Promise<GenealogyProposal> {
     try {
-      const out = await (this.env.AI as unknown as AiCallable)(this.model(), {
+      const out = await this.env.AI.run(this.model(), {
         messages: [
           { role: "system", content: PARSE_SYSTEM_PROMPT },
           { role: "user", content: PLOT_TO_GENEALOGY(input) },
@@ -37,7 +37,7 @@ export class LazyWorkersProvider implements GenealogyAIProvider {
 
   async explainRelationship(from: string, to: string, chain: string): Promise<string> {
     try {
-      const out = await (this.env.AI as unknown as AiCallable)(this.model(), {
+      const out = await this.env.AI.run(this.model(), {
         messages: [{ role: "user", content: RELATION_EXPLAIN_PROMPT(from, to, chain) }],
       });
       return ((out as { response?: string }).response ?? "").trim() || this.fallback.explainRelationship(from, to, chain);
@@ -51,7 +51,7 @@ export class LazyWorkersProvider implements GenealogyAIProvider {
   }
 }
 
-type AiCallable = (model: string, input: Record<string, unknown>) => Promise<unknown>;
+
 
 /** استخراج اولین بلوک JSON از پاسخ احتمالیِ آمیخته */
 export function extractJson(text: string): string {
