@@ -33,7 +33,12 @@ id = "e4dc438f9c864b40abd05e778223f15e"
 [ai]
 binding = "AI"
 
+# Custom domain
+routes = [
+  { pattern = "shajareh.anydev.ir/*", zone_name = "anydev.ir" }
+]
+
 [vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "production"
 AI_PROVIDER = "rules"
 AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
