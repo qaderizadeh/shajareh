@@ -58,10 +58,14 @@ export function buildApp(env: Env): Hono<AppEnv> {
   app.route("/api/ai", aiRoutes(ai, privacy));
   app.route("/api/admin", adminRoutes(admin, privacy));
 
-  // مسیر خطای واحدف
-  app.notFound((c) =>
-    c.json({ error: { message: "آدرس پیدا نشد", code: "NOT_FOUND" } }, 404)
-  );
+  // مسیرهای غیر-API را به اسپا (در صورت در دسترس بودن assets) بسپار
+  app.notFound(async (c) => {
+    const url = new URL(c.req.url);
+    if (!url.pathname.startsWith("/api") && c.req.method === "GET" && env.ASSETS) {
+      return env.ASSETS.fetch(c.req.raw);
+    }
+    return c.json({ error: { message: "آدرس پیدا نشد", code: "NOT_FOUND" } }, 404);
+  });
 
   app.onError((err: unknown, c) => {
     if (err instanceof HTTPException) {

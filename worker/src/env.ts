@@ -1,4 +1,4 @@
-import type { Ai, KVNamespace, R2Bucket, D1Database } from "@cloudflare/workers-types";
+import type { Ai, KVNamespace, R2Bucket, D1Database, Fetcher } from "@cloudflare/workers-types";
 
 export interface Env {
   DB: D1Database;
@@ -9,6 +9,7 @@ export interface Env {
   AI_PROVIDER: string;
   AI_MODEL: string;
   APP_URL?: string;
+  ASSETS?: Fetcher;
 }
 
 export interface User {

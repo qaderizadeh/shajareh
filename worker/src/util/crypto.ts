@@ -1,4 +1,5 @@
-const ITERATIONS = 120_000;
+const ITERATIONS = 100_000;  // max supported by Workers WebCrypto
+const MAX_VERIFY_ITERS = 200_000; // guard against hostile stored values
 const KEY_LEN = 32;
 
 function toBase64(buf: ArrayBuffer): string {
@@ -37,7 +38,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
   const [scheme, iters, saltB64, hashB64] = parts as [string, string, string, string];
   const iterations = Number(iters);
-  if (!Number.isFinite(iterations)) return false;
+  if (!Number.isFinite(iterations) || iterations > MAX_VERIFY_ITERS) return false;
   const salt = new Uint8Array(fromBase64(saltB64));
   const derived = await crypto.subtle.deriveBits(
     { name: "PBKDF2", salt: salt as unknown as BufferSource, iterations, hash: "SHA-256" },
