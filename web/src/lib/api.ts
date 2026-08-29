@@ -1,5 +1,9 @@
 const TOKEN_KEY = "shajareh_token";
 
+/** Callback fired on 401 so the auth layer can redirect via React Router. */
+let onUnauthorized: (() => void) | null = null;
+export function setOnUnauthorized(fn: (() => void) | null) { onUnauthorized = fn; }
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -35,8 +39,9 @@ async function request<T>(path: string, options: RequestInit = {}, isForm = fals
 
   if (res.status === 401) {
     clearToken();
+    // Fire the callback so React Router can navigate — no full page reload
     if (!path.startsWith("/auth/login") && !path.startsWith("/auth/register")) {
-      window.location.href = "/auth";
+      onUnauthorized?.();
     }
   }
 

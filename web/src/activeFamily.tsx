@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "./lib/api";
 import type { FamilyStats, FamilySummary } from "./lib/types";
 
@@ -29,44 +29,69 @@ const KEY = "shajareh_active_family";
 export function ActiveFamilyProvider({ children }: { children: ReactNode }) {
   const [families, setFamilies] = useState<FamilySummary[]>([]);
   const [family, setFamily] = useState<FamilyData | null>(null);
-  const [familyId, setFamilyIdState] = useState<string | null>(() => localStorage.getItem(KEY));
+  const [familyId, setFamilyIdState] = useState<string | null>(() => {
+    try { return localStorage.getItem(KEY); } catch { return null; }
+  });
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  const familyIdRef = useRef(familyId);
 
-  async function refresh() {
+  // Keep ref in sync
+  useEffect(() => { familyIdRef.current = familyId; }, [familyId]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (!mountedRef.current) return;
     setLoading(true);
     try {
       const list = await api.get<{ families: FamilySummary[] }>("/families");
+      if (!mountedRef.current) return;
       setFamilies(list.families);
-      const active = familyId && list.families.some((f) => f.id === familyId) ? familyId : (list.families[0]?.id ?? null);
+      const current = familyIdRef.current;
+      const active = current && list.families.some((f) => f.id === current)
+        ? current
+        : (list.families[0]?.id ?? null);
       setFamilyIdState(active);
     } catch {
-      setFamilies([]);
+      if (mountedRef.current) setFamilies([]);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    refresh();
   }, []);
 
+  // Initial load
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  // Load family details when familyId changes
   useEffect(() => {
     if (familyId) {
       localStorage.setItem(KEY, familyId);
+      let cancelled = false;
       api
         .get<{ family: FamilySummary & { name: string }; stats: FamilyStats }>(`/families/${familyId}`)
         .then((d) => {
-          setFamily({ ...(d.family as FamilySummary), stats: d.stats, name: d.family.name });
+          if (!cancelled && mountedRef.current) {
+            setFamily({ ...(d.family as FamilySummary), stats: d.stats, name: d.family.name });
+          }
         })
-        .catch(() => setFamily(null));
+        .catch(() => {
+          if (!cancelled && mountedRef.current) setFamily(null);
+        });
+      return () => { cancelled = true; };
     } else {
       setFamily(null);
     }
   }, [familyId]);
 
-  function setFamilyId(id: string) {
+  const setFamilyId = useCallback((id: string) => {
     setFamilyIdState(id);
-  }
+  }, []);
 
   return (
     <Ctx.Provider value={{ familyId, family, families, loading, setFamilyId, refresh }}>

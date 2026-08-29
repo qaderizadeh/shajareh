@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, clearToken, getToken, setToken } from "./lib/api";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { api, clearToken, getToken, setToken, setOnUnauthorized } from "./lib/api";
 import type { User } from "./lib/types";
 
 interface AuthCtx {
@@ -13,41 +14,60 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx>(null as unknown as AuthCtx);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+/** Inner provider that has access to useNavigate */
+function AuthProviderInner({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const mountedRef = useRef(true);
 
-  async function refresh() {
-    if (!getToken()) {
+  // Global401 handler: navigate to /auth via React Router (no full page reload)
+  useEffect(() => {
+    setOnUnauthorized(() => {
       setUser(null);
-      setReady(true);
+      navigate("/auth", { replace: true });
+    });
+    return () => setOnUnauthorized(null);
+  }, [navigate]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (!getToken()) {
+      if (mountedRef.current) setUser(null);
+      if (mountedRef.current) setReady(true);
       return;
     }
     try {
       const { user } = await api.get<{ user: User }>("/auth/me");
-      setUser(user);
+      if (mountedRef.current) setUser(user);
     } catch {
-      setUser(null);
+      if (mountedRef.current) setUser(null);
     } finally {
-      setReady(true);
+      if (mountedRef.current) setReady(true);
     }
-  }
+  }, []);
 
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
-  async function login(email: string, password: string) {
+  const login = useCallback(async (email: string, password: string) => {
     const { user, token } = await api.post<{ user: User; token: string }>("/auth/login", { email, password });
     setToken(token);
     setUser(user);
-  }
-  async function register(name: string, email: string, password: string) {
+  }, []);
+
+  const register = useCallback(async (name: string, email: string, password: string) => {
     const { user, token } = await api.post<{ user: User; token: string }>("/auth/register", { name, email, password });
     setToken(token);
     setUser(user);
-  }
-  async function logout() {
+  }, []);
+
+  const logout = useCallback(async () => {
     try {
       await api.post<{ ok: boolean }>("/auth/logout", {});
     } catch {
@@ -55,10 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     clearToken();
     setUser(null);
-  }
+  }, []);
 
   return (
     <Ctx.Provider value={{ user, ready, login, register, logout, refresh }}>{children}</Ctx.Provider>
+  );
+}
+
+/** Outer provider wraps InnerProvider in BrowserRouter so useNavigate works */
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <AuthProviderInner>{children}</AuthProviderInner>
   );
 }
 
