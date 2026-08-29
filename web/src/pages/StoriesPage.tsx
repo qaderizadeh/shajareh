@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useActiveFamily } from "../activeFamily";
 import { api } from "../lib/api";
 import { Button, Card, EmptyState, ErrorState, Field, LoadingState, Modal, TextArea, TextInput, useToast } from "../components/ui";
@@ -25,9 +25,10 @@ export default function StoriesPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [busy, setBusy] = useState(false);
 
-  async function load() {
-    if (!familyId) return;
+  const load = useCallback(async () => {
+    if (!familyId) { setLoading(false); return; }
     setLoading(true);
+    setErr("");
     try {
       const d = await api.get<{ stories: Story[] }>(`/stories/list/${familyId}`);
       setStories(d.stories);
@@ -38,9 +39,9 @@ export default function StoriesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [familyId]);
 
-  useEffect(() => { load(); }, [familyId]);
+  useEffect(() => { load(); }, [load]);
 
   async function create() {
     if (!familyId || !form.title.trim()) return;
