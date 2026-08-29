@@ -61,6 +61,7 @@ export function ProtectedLayout() {
           </NavLink>
         ))}
         <div className="grow" />
+        <Link to="/relation-path" className="sidebar-link">🔗 مسیر رابطه</Link>
         {user.role === "ADMIN" && (
           <Link to="/admin" className="sidebar-link">🛡️ مدیریت</Link>
         )}

@@ -11,6 +11,7 @@ import AdminPage from "./pages/AdminPage";
 import PersonPage from "./pages/PersonPage";
 import AddPersonPage from "./pages/AddPersonPage";
 import StoriesPage from "./pages/StoriesPage";
+import RelationPathPage from "./pages/RelationPathPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/admin" element={<AdminPage />} />          <Route path="/persons/new" element={<AddPersonPage />} />
           <Route path="/persons/:id" element={<PersonPage />} />
           <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/relation-path" element={<RelationPathPage />} />
       </Route>
     </Routes>
   );

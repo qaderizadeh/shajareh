@@ -99,6 +99,7 @@ export default function PersonPage() {
           <Button variant="soft" size="sm" onClick={() => setSheet("media")}>📷 عکس‌ها ({media.length})</Button>
           <Button variant="secondary" size="sm" onClick={() => setSheet("edit")}>ویرایش</Button>
           <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>🗑️ حذف</Button>
+          <Button variant="soft" size="sm" onClick={() => navigate(`/relation-path?from=${person.id}`)}>🔗 مسیر رابطه</Button>
         </div>
       </Card>
 
