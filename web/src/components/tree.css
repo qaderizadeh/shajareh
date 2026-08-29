@@ -1,0 +1,44 @@
+.tree-root { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.tree-node {
+  display: inline-block;
+  text-align: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 8px 12px 6px;
+  min-width: 96px;
+  max-width: 150px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.tree-node:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.tree-node.selected { border-color: var(--primary); background: var(--primary-soft); }
+.tree-node .tn-name { font-weight: 700; font-size: var(--text-sm); line-height: 1.5; }
+.tree-node .tn-dates { font-size: var(--text-xs); color: var(--muted); }
+.tree-node .tn-live { font-size: var(--text-xs); }
+
+.tree-branch { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.tree-children {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 2px solid var(--border);
+  position: relative;
+  width: 100%;
+}
+.tree-branch > .tree-connector {
+  width: 2px; height: 14px; background: var(--border-strong);
+}
+.tree-legend { font-size: var(--text-xs); color: var(--muted); }
+.tree-toolbar { position: sticky; top: 0; z-index: 5; background: var(--background); padding: 6px 0 10px; }
+
+/* حالت فشرده در موبایل: هر نسل یک ستون رنگی خفیف */
+@media (max-width: 520px) {
+  .tree-node { min-width: 88px; padding: 7px 8px 5px; }
+  .tree-node .tn-name { font-size: var(--text-xs); }
+  .tree-children { gap: var(--space-2); padding-top: 12px; }
+}

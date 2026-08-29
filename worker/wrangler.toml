@@ -1,0 +1,37 @@
+# ===== Shajareh Worker config =====
+name = "shajareh"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# SPA static assets built from the web workspace
+[assets]
+directory = "../web/dist"
+not_found_handling = "single-page-application"
+
+# Database (D1)
+# Fill DATABASE_ID after `wrangler d1 create shajareh-db`.
+[[d1_databases]]
+binding = "DB"
+database_name = "shajareh-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# Sessions (KV)
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "00000000000000000000000000000000"
+
+# Media storage (R2)
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "shajareh-media"
+
+# Workers AI
+[ai]
+binding = "AI"
+
+[vars]
+ENVIRONMENT = "development"
+AI_PROVIDER = "rules"
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"

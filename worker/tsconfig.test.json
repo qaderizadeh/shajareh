@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist-test",
+    "noEmit": false,
+    "esModuleInterop": true,
+    "lib": ["ES2022"],
+    "types": ["node", "@cloudflare/workers-types"]
+  },
+  "include": ["src/**/*.test.ts"]
+}

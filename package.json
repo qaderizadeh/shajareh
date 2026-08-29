@@ -1,0 +1,22 @@
+{
+  "name": "shajareh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "شجره — آرشیو زنده خانواده",
+  "workspaces": [
+    "worker",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "dev:worker": "npm run dev --workspace=worker",
+    "build": "npm run build --workspace=web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "deploy": "npm run deploy --workspace=worker"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

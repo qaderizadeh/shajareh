@@ -1,0 +1,82 @@
+:root {
+  /* ==== رنگ‌ها (Light) ==== */
+  --background: #fafaf8;
+  --foreground: #1c2420;
+  --surface: #ffffff;
+  --surface-muted: #f2f3ef;
+  --surface-hover: #eceee9;
+  --border: #e2e4de;
+  --border-strong: #c9cec6;
+  --primary: #0f6e52;
+  --primary-hover: #0b5a43;
+  --primary-soft: #e3f2ec;
+  --primary-foreground: #ffffff;
+  --accent: #a66a3a;
+  --accent-soft: #f6ece1;
+  --danger: #c0392b;
+  --danger-soft: #fbeae7;
+  --success: #1e7a4a;
+  --warning: #a8751f;
+  --warning-soft: #fbf2d9;
+  --muted: #66736c;
+  --muted-strong: #46524b;
+  --shadow-sm: 0 1px 2px rgba(20, 30, 25, 0.06);
+  --shadow-md: 0 4px 16px rgba(20, 30, 25, 0.08);
+  --shadow-lg: 0 12px 40px rgba(20, 30, 25, 0.14);
+  --hairline: 1px solid var(--border);
+  --sidebar-width: 248px;
+  --bottomnav-height: 66px;
+
+  /* ==== فاصله‌گذاری ==== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 28px;
+  --space-7: 36px;
+  --space-8: 48px;
+
+  /* ==== گوشه‌ها ==== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+  --radius-full: 999px;
+
+  /* ==== تایپوگرافی ==== */
+  --font-sans: "Vazirmatn", "Segoe UI", Tahoma, "Iranian Sans", system-ui, -apple-system, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+}
+
+[data-theme="dark"] {
+  --background: #121714;
+  --foreground: #e8ede9;
+  --surface: #1a201c;
+  --surface-muted: #212824;
+  --surface-hover: #28312c;
+  --border: #2b342f;
+  --border-strong: #3a453f;
+  --primary: #3bb487;
+  --primary-hover: #4bc696;
+  --primary-soft: #14352a;
+  --primary-foreground: #0c1410;
+  --accent: #d99a68;
+  --accent-soft: #3a2c1d;
+  --danger: #e07a6a;
+  --danger-soft: #3a221e;
+  --success: #5ec08b;
+  --warning: #e2b45c;
+  --warning-soft: #3a2f1a;
+  --muted: #9aa79f;
+  --muted-strong: #c2ccc6;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 44px rgba(0, 0, 0, 0.55);
+  --hairline: 1px solid var(--border);
+}
